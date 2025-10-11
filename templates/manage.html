@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Tasks & Users{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Manage Tasks & Users</h2>
+
+    <!-- Task Creation Form -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            Create a Task
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="taskTitle" class="form-label">Task Title</label>
+                    <input type="text" id="taskTitle" name="title" class="form-control" placeholder="Enter task title" required>
+                </div>
+                <div class="mb-3">
+                    <label for="taskDesc" class="form-label">Task Description</label>
+                    <textarea id="taskDesc" name="description" class="form-control" rows="3" placeholder="Enter task details"></textarea>
+                </div>
+                <button type="submit" class="btn btn-success">Create Task</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Search Section -->
+    <div class="card">
+        <div class="card-header bg-secondary text-white">
+            Add User to Group
+        </div>
+        <div class="card-body">
+            <form method="get" class="d-flex mb-3">
+                <input type="text" name="q" class="form-control me-2" placeholder="Search user by name or email">
+                <button type="submit" class="btn btn-outline-light">Search</button>
+            </form>
+
+            <!-- Example User Search Results -->
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    John Doe (john@example.com)
+                    <button class="btn btn-sm btn-primary">Add to Group</button>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Jane Smith (jane@example.com)
+                    <button class="btn btn-sm btn-primary">Add to Group</button>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
