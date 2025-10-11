@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import get_user_model, authenticate, login as auth_login, logout
 from django.contrib.auth.decorators import login_required
-
+import smtplib
 User = get_user_model()
 
 
