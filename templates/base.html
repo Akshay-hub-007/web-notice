@@ -24,65 +24,190 @@
             flex-grow: 1;
             padding: 20px;
         }
+
+        /* Chatbot styles */
+        .chatbot-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 320px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1000;
+        }
+
+        .chatbot-header {
+            background-color: #0d6efd;
+            color: white;
+            padding: 10px 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chatbot-body {
+            height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #f8f9fa;
+        }
+
+        .chatbot-input {
+            display: flex;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .chatbot-input input {
+            border: none;
+            flex-grow: 1;
+            padding: 10px;
+        }
+
+        .chatbot-input button {
+            border: none;
+            background-color: #0d6efd;
+            color: white;
+            padding: 10px 15px;
+        }
+
+        .chatbot-input input:focus {
+            outline: none;
+        }
+
+        /* Floating chat icon */
+        .chatbot-icon {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: #0d6efd;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .chatbot-icon:hover {
+            background-color: #0b5ed7;
+        }
+
+        @media (max-width: 768px) {
+            .chatbot-container {
+                width: 90%;
+                right: 5%;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar -->
-    <div class="sidebar d-flex flex-column p-3 text-white">
-        <h2 class="fs-4">Menu</h2>
-        <hr>
+   <!-- Sidebar -->
+<div class="sidebar d-flex flex-column p-3 text-white">
+    <h2 class="fs-4">Menu</h2>
+    <hr>
+    <ul class="nav nav-pills flex-column mb-auto">
 
-        <!-- 👤 User info -->
-        {% if user.is_authenticated %}
-            <p class="mb-1">Hello, <strong>{{ user.username }}</strong></p>
-            <small class="text-light">({{ user.user_type|title }})</small>
-        {% else %}
-            <p>Welcome, Guest</p>
-        {% endif %}
-        <hr>
+        <li class="nav-item">
+            <a href="{% url 'dashboard' %}" class="nav-link text-white">Dashboard</a>
+        </li>
 
-        <ul class="nav nav-pills flex-column mb-auto">
-            <li class="nav-item">
-                <a href="{% url 'dashboard' %}" class="nav-link text-white">Dashboard</a>
+        {% if user.user_type == 'admin' %}
+            <li>
+                <a href="{% url 'create_notice' %}" class="nav-link text-white">Create Notice</a>
             </li>
             <li>
-                <a href="{% url 'notices' %}" class="nav-link text-white">Notices</a>
+                <a href="{% url 'view_notices' %}" class="nav-link text-white">View Notices</a>
             </li>
-
-            {% if user.is_authenticated and user.user_type == 'admin' %}
-                <!-- Visible only for Admin -->
-                <li>
-                    <a href="{% url 'manage' %}" class="nav-link text-white">Manage Notices</a>
-                </li>
-                <li>
-                    <a href="{% url 'creategroup' %}" class="nav-link text-white">Create Group</a>
-                </li>
-
-
-            {% endif %}
-
-            {% if user.is_authenticated %}
-                <li>
-                    <a href="{% url 'profile' %}" class="nav-link text-white">Profile</a>
-                </li>
-                <li>
-                    <a href="{% url 'logout' %}" class="nav-link text-white">Logout</a>
-                </li>
-            {% else %}
-                <li>
-                    <a href="{% url 'login' %}" class="nav-link text-white">Login</a>
-                </li>
-            {% endif %}
-        </ul>
-    </div>
+            <li>
+                <a href="{% url 'profile' %}" class="nav-link text-white">Profile</a>
+            </li>
+        {% elif user.user_type == 'user' %}
+            <li>
+                <a href="{% url 'view_notices' %}" class="nav-link text-white">View Notices</a>
+            </li>
+            <li>
+                <a href="{% url 'profile' %}" class="nav-link text-white">Profile</a>
+            </li>
+        {% endif %}
+    </ul>
+</div>
 
     <!-- Main Content -->
     <div class="content">
         {% block content %}{% endblock %}
     </div>
 
+    <!-- Chatbot -->
+    <div class="chatbot-container" id="chatbot">
+        <div class="chatbot-header">
+            Chat Assistant
+            <button class="btn btn-sm btn-light" id="closeChat" style="font-size: 12px;">✖</button>
+        </div>
+        <div class="chatbot-body" id="chatBody">
+            <div class="text-muted small">Hello 👋, how can I help you?</div>
+        </div>
+        <div class="chatbot-input">
+            <input type="text" id="chatInput" placeholder="Type a message...">
+            <button id="sendBtn">Send</button>
+        </div>
+    </div>
+
+    <div class="chatbot-icon" id="chatIcon">
+        💬
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const chatBody = document.getElementById('chatBody');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const closeChat = document.getElementById('closeChat');
+        const chatbot = document.getElementById('chatbot');
+        const chatIcon = document.getElementById('chatIcon');
+
+        sendBtn.addEventListener('click', () => {
+            const msg = chatInput.value.trim();
+            if (msg) {
+                const userMsg = document.createElement('div');
+                userMsg.classList.add('text-end', 'mb-2');
+                userMsg.innerHTML = `<span class="badge bg-primary">${msg}</span>`;
+                chatBody.appendChild(userMsg);
+                chatInput.value = '';
+
+                chatBody.scrollTop = chatBody.scrollHeight;
+
+                setTimeout(() => {
+                    const botMsg = document.createElement('div');
+                    botMsg.classList.add('text-start', 'mb-2');
+                    botMsg.innerHTML = `<span class="badge bg-secondary">You said: ${msg}</span>`;
+                    chatBody.appendChild(botMsg);
+                    chatBody.scrollTop = chatBody.scrollHeight;
+                }, 600);
+            }
+        });
+
+        closeChat.addEventListener('click', () => {
+            chatbot.style.display = 'none';
+            chatIcon.style.display = 'flex';
+        });
+
+        chatIcon.addEventListener('click', () => {
+            chatbot.style.display = 'flex';
+            chatIcon.style.display = 'none';
+        });
+    </script>
 </body>
 </html>

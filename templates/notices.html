@@ -3,26 +3,50 @@
 {% block title %}Notices{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container mt-4">
     <h2 class="mb-4">Notices</h2>
 
-    <!-- Example Notice List -->
-    <div class="list-group">
-        <a href="#" class="list-group-item list-group-item-action">
-            <h5 class="mb-1">Notice 1</h5>
-            <p class="mb-1">This is the first notice content.</p>
-            <small class="text-muted">Posted on: 2025-09-27</small>
-        </a>
-        <a href="#" class="list-group-item list-group-item-action">
-            <h5 class="mb-1">Notice 2</h5>
-            <p class="mb-1">This is the second notice content.</p>
-            <small class="text-muted">Posted on: 2025-09-20</small>
-        </a>
-        <a href="#" class="list-group-item list-group-item-action">
-            <h5 class="mb-1">Notice 3</h5>
-            <p class="mb-1">This is the third notice content.</p>
-            <small class="text-muted">Posted on: 2025-09-10</small>
-        </a>
-    </div>
+    {% if notices %}
+        <div class="row g-3">
+            {% for notice in notices %}
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title">{{ notice.title }}</h5>
+                                {% if notice.priority == 'normal' %}
+                                    <span class="badge bg-secondary">{{ notice.priority|capfirst }}</span>
+                                {% elif notice.priority == 'important' %}
+                                    <span class="badge bg-warning text-dark">{{ notice.priority|capfirst }}</span>
+                                {% elif notice.priority == 'urgent' %}
+                                    <span class="badge bg-danger">{{ notice.priority|capfirst }}</span>
+                                {% endif %}
+                            </div>
+
+                            <p class="card-text">{{ notice.content|truncatewords:25 }}</p>
+
+                            {% if notice.attachment %}
+                                <p>
+                                    <a href="{{ notice.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        View Attachment
+                                    </a>
+                                </p>
+                            {% endif %}
+
+                            <div class="text-muted small mt-2">
+                                Posted by: <strong>{{ notice.posted_by.username }}</strong> |
+                                Posted on: {{ notice.created_at|date:"M d, Y" }}
+                                {% if notice.expiry_date %}
+                                    | Expires on: {{ notice.expiry_date|date:"M d, Y" }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-muted">No notices available.</p>
+    {% endif %}
 </div>
 {% endblock %}

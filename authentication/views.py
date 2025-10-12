@@ -73,5 +73,24 @@ def logout_view(request):
 
 @login_required
 def profile(request):
+    user = request.user
 
-    return render(request, 'profile.html')
+    if request.method == "POST":
+        username = request.POST.get("username")
+        email = request.POST.get("email")
+        phone = request.POST.get("phone")
+        user_type = request.POST.get("user_type")
+        image = request.FILES.get("image")
+
+        # Update user details
+        user.username = username
+        user.email = email
+        user.phone = phone
+        user.user_type = user_type
+        if image:
+            user.image = image
+        user.save()
+
+        return render(request, "profile.html", {"user": user, "message": "Profile updated successfully!"})
+
+    return render(request, "profile.html", {"user": user})

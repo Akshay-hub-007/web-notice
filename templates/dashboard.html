@@ -3,7 +3,97 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-    <h1>Dashboard</h1>
-    <p>Welcome {{ user.username }}</p>
+<div class="container mt-4">
+    <h1>Welcome, {{ user.username }}</h1>
 
+    <div class="row mt-4 g-3">
+        <!-- Notices Stats -->
+        <div class="col-md-3">
+            <div class="card text-white bg-primary h-100 text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Notices</h5>
+                    <p class="display-6 countup" data-target="{{ total_notices }}">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-white bg-success h-100 text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Active Notices</h5>
+                    <p class="display-6 countup" data-target="{{ active_notices }}">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-white bg-warning h-100 text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Important Notices</h5>
+                    <p class="display-6 countup" data-target="{{ important_notices }}">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-white bg-danger h-100 text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Urgent Notices</h5>
+                    <p class="display-6 countup" data-target="{{ urgent_notices }}">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4 g-3">
+        <!-- User Stats -->
+        <div class="col-md-4">
+            <div class="card text-white bg-info h-100 text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <p class="display-6 countup" data-target="{{ total_users }}">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-secondary h-100 text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Admin Users</h5>
+                    <p class="display-6 countup" data-target="{{ admin_users }}">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-dark h-100 text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Regular Users</h5>
+                    <p class="display-6 countup" data-target="{{ normal_users }}">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Count-up JS -->
+<script>
+const counters = document.querySelectorAll('.countup');
+counters.forEach(counter => {
+    const updateCount = () => {
+        const target = +counter.getAttribute('data-target');
+        const count = +counter.innerText;
+        const speed = 50;
+        const increment = Math.ceil(target / speed);
+
+        if(count < target) {
+            counter.innerText = count + increment;
+            setTimeout(updateCount, 20);
+        } else {
+            counter.innerText = target;
+        }
+    };
+    updateCount();
+});
+</script>
 {% endblock %}

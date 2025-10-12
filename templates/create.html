@@ -1,10 +1,56 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Create</title>
-</head>
-<body>
-  <h1>Create</h1>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Create Notices{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Create Notice</h2>
+    <div class="card shadow-sm p-3">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Title -->
+            <div class="mb-3">
+                <label for="title" class="form-label">Title</label>
+                <input type="text" id="title" name="title" class="form-control" placeholder="Enter notice title" required>
+            </div>
+
+            <!-- Content -->
+            <div class="mb-3">
+                <label for="content" class="form-label">Content</label>
+                <textarea id="content" name="content" class="form-control" rows="4" placeholder="Enter notice details" required></textarea>
+            </div>
+
+            <!-- Priority -->
+            <div class="mb-3">
+                <label for="priority" class="form-label">Priority</label>
+                <select id="priority" name="priority" class="form-select">
+                    <option value="normal">Normal</option>
+                    <option value="important">Important</option>
+                    <option value="urgent">Urgent</option>
+                </select>
+            </div>
+
+            <!-- Attachment -->
+            <div class="mb-3">
+                <label for="attachment" class="form-label">Attachment (optional)</label>
+                <input type="file" id="attachment" name="attachment" class="form-control">
+            </div>
+
+            <!-- Expiry Date -->
+            <div class="mb-3">
+                <label for="expiry_date" class="form-label">Expiry Date (optional)</label>
+                <input type="date" id="expiry_date" name="expiry_date" class="form-control">
+            </div>
+
+            <!-- Is Active -->
+            <div class="mb-3 form-check">
+                <input type="checkbox" id="is_active" name="is_active" class="form-check-input" checked>
+                <label for="is_active" class="form-check-label">Active</label>
+            </div>
+
+            <button type="submit" class="btn btn-success">Create Notice</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

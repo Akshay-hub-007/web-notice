@@ -3,18 +3,77 @@
 {% block title %}Profile{% endblock %}
 
 {% block content %}
-    <h1>User Profile</h1>
-    <div style="margin-top: 20px; background: #f9f9f9; padding: 20px; border-radius: 8px;">
-        <h3>Welcome, {{ user.username }} </h3>
-        <p><strong>Email:</strong> {{ user.email }}</p>
-        <p><strong>First Name:</strong> {{ user.first_name }}</p>
-        <p><strong>Last Name:</strong> {{ user.last_name }}</p>
+<h1>Edit Profile</h1>
+
+{% if message %}
+<div class="alert alert-success">{{ message }}</div>
+{% endif %}
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data"
+      style="margin-top: 20px; background: #f9f9f9; padding: 20px; border-radius: 8px;">
+    {% csrf_token %}
+
+    <!-- Profile Image -->
+    <div class="mb-3 text-center">
+        {% if user.image %}
+            <img src="{{ user.image.url }}" alt="Profile Image"
+                 width="120" height="120"
+                 style="border-radius: 50%; object-fit: cover;">
+        {% else %}
+            <!-- Show first letter as fallback -->
+            <div style="
+                width:120px; height:120px;
+                border-radius:50%;
+                background:#333;
+                color:#fff;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:48px;
+                margin:auto;">
+                {{ user.username|slice:":1"|upper }}
+            </div>
+        {% endif %}
+
+        <label class="form-label mt-2">Change Profile Image:</label>
+        <input type="file" name="image" class="form-control">
     </div>
 
-    <div style="margin-top: 20px;">
-        <a href="/auth/logout"
-           style="background: #333; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">
-           Logout
-        </a>
+    <!-- Username -->
+    <div class="mb-3">
+        <label class="form-label">Username:</label>
+        <input type="text" name="username" value="{{ user.username }}" class="form-control" required>
     </div>
+
+    <!-- Email -->
+    <div class="mb-3">
+        <label class="form-label">Email:</label>
+        <input type="email" name="email" value="{{ user.email }}" class="form-control" required>
+    </div>
+
+    <!-- Phone -->
+    <div class="mb-3">
+        <label class="form-label">Mobile Number:</label>
+        <input type="text" name="phone" value="{{ user.phone }}" class="form-control" required>
+    </div>
+
+    <!-- User Type (Non-editable) -->
+    <div class="mb-3">
+        <label class="form-label">User Type:</label>
+        <input type="text" class="form-control" value="{{ user.user_type|title }}" readonly>
+    </div>
+
+    <button type="submit" class="btn btn-dark w-100">Save Changes</button>
+</form>
+
+<div style="margin-top: 20px;">
+    <a href="/auth/logout"
+       style="background: #333; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">
+       Logout
+    </a>
+</div>
+
 {% endblock %}
