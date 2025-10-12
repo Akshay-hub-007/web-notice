@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import get_user_model, authenticate, login as auth_login, logout
 from django.contrib.auth.decorators import login_required
-import smtplib
+
+from webnotice.utils import send_email
+
 User = get_user_model()
 
 
@@ -15,7 +17,7 @@ def register(request):
         phone = request.POST.get("phone")
         user_type = request.POST.get("user_type")  # admin/user
         password1 = request.POST.get("password")
-
+        image = request.FILES.get("image")
 
         # Check for existing user/email/phone
         if User.objects.filter(username=username).exists():
@@ -31,10 +33,13 @@ def register(request):
             email=email,
             phone=phone,
             user_type=user_type,
-            password=password1
+            password=password1,
+            image=image
         )
 
-        auth_login(request, user)  # Log the user in
+        auth_login(request, user)
+        send_email(email, "Welcome to Web Notice", "Thank you for registering!")
+        # Log the user in
         return redirect('/dashboard/')
 
     return render(request, "register.html")

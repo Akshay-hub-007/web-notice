@@ -1,22 +1,30 @@
 import smtplib
-from email.mime.text import MIMEText
+from email.message import EmailMessage
 
-def send_email(to, subject, message):
-    """Reusable function for sending emails via SMTP"""
-    sender_email = "your_email@gmail.com"
-    sender_password = "your_app_password"  # use Gmail app password
+def send_email(to, subject, body, use_ssl=False, timeout=20):
+    """Send email via Gmail SMTP (TLS or SSL)"""
+    sender_email = "akshaykalangi54@gmail.com"
+    sender_password = "hyss gpbd icpd ctjj"
+    print(to)
+    msg = EmailMessage()
+    msg["From"] = sender_email
+    msg["To"] = to
+    msg["Subject"] = subject
+    msg.set_content(body)
 
     try:
-        msg = MIMEText(message, "plain")
-        msg["From"] = sender_email
-        msg["To"] = to
-        msg["Subject"] = subject
-
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        if use_ssl:
+            # SSL on port 465
+            server = smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=timeout)
+        else:
+            # TLS on port 587
+            server = smtplib.SMTP("smtp.gmail.com", 587, timeout=timeout)
+            server.ehlo()
             server.starttls()
-            server.login(sender_email, sender_password)
-            server.send_message(msg)
+            server.ehlo()
 
-        print(f"✅ Email sent successfully to {to}")
+        server.login(sender_email, sender_password)
+        server.send_message(msg)
+        server.quit()
     except Exception as e:
-        print(f"❌ Failed to send email: {e}")
+        print(f"Failed to send email: {type(e).__name__}: {e}")

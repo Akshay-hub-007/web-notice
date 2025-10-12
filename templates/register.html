@@ -11,7 +11,12 @@
 
 <div class="card shadow p-4" style="width: 26rem;">
     <h3 class="text-center mb-4">Register</h3>
-    <form method="post">
+    {% if error %}
+    <div class="alert alert-danger text-center">
+        {{ error }}
+    </div>
+    {% endif %}
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
         <!-- Username -->
@@ -46,6 +51,11 @@
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
             </select>
+        </div>
+
+         <div class="mb-3">
+        <label for="image" class="form-label">Profile Image</label>
+        <input type="file" id="image" name="image" class="form-control">
         </div>
 
         <!-- Submit Button -->
