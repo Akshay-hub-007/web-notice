@@ -38,14 +38,30 @@ def dashboard(request):
     }
     return render(request, 'dashboard.html', context)
 
+from django.db.models import Q
+
+from django.db.models import Q
+
 @login_required
 def notices(request):
-    # Fetch all active notices ordered by created_at descending
-    all_notices = Notice.objects.filter(is_active=True).order_by('-created_at')
+    query = request.GET.get('q', '')
+    priority = request.GET.get('priority', '')
 
-    context = {
-        'notices': all_notices
-    }
+    notices = Notice.objects.filter(is_active=True)
+
+    if query:
+        notices = notices.filter(Q(title__icontains=query) | Q(content__icontains=query))
+
+    if priority:
+        notices = notices.filter(priority=priority)
+
+    notices = notices.order_by('-created_at')
+
+    context = {'notices': notices, 'query': query, 'priority': priority}
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, 'notices_list.html', context)
+
     return render(request, 'notices.html', context)
 
 

@@ -6,6 +6,20 @@
 <div class="container mt-4">
     <h2 class="mb-4">Notices</h2>
 
+    <!-- Search + Priority Filter -->
+    <form method="GET" class="mb-4 d-flex gap-2">
+        <input type="text" name="q" class="form-control" placeholder="Search by title or content" value="{{ request.GET.q|default:'' }}">
+
+        <select name="priority" class="form-select">
+            <option value="">All Priorities</option>
+            <option value="normal" {% if request.GET.priority == 'normal' %}selected{% endif %}>Normal</option>
+            <option value="important" {% if request.GET.priority == 'important' %}selected{% endif %}>Important</option>
+            <option value="urgent" {% if request.GET.priority == 'urgent' %}selected{% endif %}>Urgent</option>
+        </select>
+
+        <button class="btn btn-primary" type="submit">Filter</button>
+    </form>
+
     {% if notices %}
         <div class="row g-3">
             {% for notice in notices %}
@@ -49,4 +63,5 @@
         <p class="text-muted">No notices available.</p>
     {% endif %}
 </div>
+
 {% endblock %}

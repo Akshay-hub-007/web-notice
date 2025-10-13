@@ -107,6 +107,7 @@ Now, generate the SQL query for the user query above.
 
 graph.add_node("classify_query", classify_query_node)
 graph.add_node("db_node" , dbNode)
+
 user_input = {"query": "Show all notices about exams"}
 
 dbNode(user_input)
