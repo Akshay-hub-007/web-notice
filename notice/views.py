@@ -50,7 +50,7 @@ def notices(request):
     notices = Notice.objects.filter(is_active=True)
 
     if query:
-        notices = notices.filter(Q(title__icontains=query) | Q(content__icontains=query))
+        notices =notices.filter(Q(title__icontains=query) | Q(content__icontains=query))
 
     if priority:
         notices = notices.filter(priority=priority)
