@@ -129,17 +129,18 @@
             <li>
                 <a href="{% url 'view_notices' %}" class="nav-link text-white">View Notices</a>
             </li>
-            <li>
-                <a href="{% url 'profile' %}" class="nav-link text-white">Profile</a>
-            </li>
+<!--            <li>-->
+<!--                <a href="{% url 'profile' %}" class="nav-link text-white">Profile</a>-->
+<!--            </li>-->
         {% elif user.user_type == 'user' %}
             <li>
                 <a href="{% url 'view_notices' %}" class="nav-link text-white">View Notices</a>
             </li>
-            <li>
-                <a href="{% url 'profile' %}" class="nav-link text-white">Profile</a>
-            </li>
+
         {% endif %}
+          <li>
+                <a href="{% url 'profile' %}" class="nav-link text-white">Profile</a>
+          </li>
     </ul>
 </div>
 

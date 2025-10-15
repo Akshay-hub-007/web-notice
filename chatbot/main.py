@@ -79,14 +79,14 @@ def query_node(state: dict):
     user_query = state["query"]
     persist_dir = "./chroma_langchain_db"
     if os.path.exists(persist_dir) and os.listdir(persist_dir):
-        print("📚 Existing vector store found.")
+        print(" Existing vector store found.")
         vector_store = Chroma(
             collection_name="example_collection",
             embedding_function=embeddings,
             persist_directory=persist_dir,
         )
     else:
-        print("📄 No existing vector store found. Creating one now...")
+        print(" No existing vector store found. Creating one now...")
         file_path = "web_notice_info.pdf"
         loader = PyPDFLoader(file_path)
         docs = loader.load()
