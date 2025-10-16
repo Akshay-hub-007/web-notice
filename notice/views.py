@@ -5,6 +5,7 @@ from notice.models import Notice
 from webnotice.utils import send_email
 
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 User = get_user_model()
 
 # Create your views here.
@@ -38,15 +39,13 @@ def dashboard(request):
     }
     return render(request, 'dashboard.html', context)
 
-from django.db.models import Q
-
-from django.db.models import Q
 
 @login_required
 def notices(request):
     query = request.GET.get('q', '')
     priority = request.GET.get('priority', '')
-
+    start_date = request.get('start_date', '')
+    end_date = request.get('end_date', '')
     notices = Notice.objects.filter(is_active=True)
 
     if query:
@@ -54,6 +53,10 @@ def notices(request):
 
     if priority:
         notices = notices.filter(priority=priority)
+
+    if start_date or end_date:
+        notices = notices.filter(Q(created_at__gt=start_date) | Q(expiry_date__lt=end_date))
+
 
     notices = notices.order_by('-created_at')
 
