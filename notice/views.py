@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-
+from django.core.mail import send_mass_mail
 from notice.models import Notice
 from webnotice.utils import send_email
 
 from django.contrib.auth import get_user_model
 from django.db.models import Q
+import datetime
 User = get_user_model()
 
 # Create your views here.
@@ -39,29 +40,48 @@ def dashboard(request):
     }
     return render(request, 'dashboard.html', context)
 
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from datetime import datetime
 
 @login_required
 def notices(request):
     query = request.GET.get('q', '')
     priority = request.GET.get('priority', '')
-    start_date = request.get('start_date', '')
-    end_date = request.get('end_date', '')
+    start_date = request.GET.get('start_date', '')
+    end_date = request.GET.get('end_date', '')
+
     notices = Notice.objects.filter(is_active=True)
 
+    # search filter
     if query:
-        notices =notices.filter(Q(title__icontains=query) | Q(content__icontains=query))
+        notices = notices.filter(Q(title__icontains=query) | Q(content__icontains=query))
 
+    # priority filter
     if priority:
         notices = notices.filter(priority=priority)
 
+    # date range filter
     if start_date or end_date:
-        notices = notices.filter(Q(created_at__gt=start_date) | Q(expiry_date__lt=end_date))
+        if start_date:
+            start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+        if end_date:
+            end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
 
+        if start_date and end_date:
+            notices = notices.filter(
+                Q(created_at__date__gte=start_date) & Q(expiry_date__date__lte=end_date)
+            )
+        elif start_date:
+            notices = notices.filter(created_at__date__gte=start_date)
+        elif end_date:
+            notices = notices.filter(expiry_date__date__lte=end_date)
 
     notices = notices.order_by('-created_at')
 
     context = {'notices': notices, 'query': query, 'priority': priority}
 
+    # support AJAX reload
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return render(request, 'notices_list.html', context)
 
@@ -99,7 +119,7 @@ def create(request):
         notice.save()
 
         # Send email to all users
-        users = User.objects.filter(is_active=True)  # fetch active users
+        users = User.objects.exclude(email = '')  # fetch active users
         subject = f"New Notice: {notice.title}"
         body = f"""
 Hello,
@@ -110,10 +130,9 @@ Title: {notice.title}
 Content: {notice.content}
 Priority: {notice.priority}
 """
-        for user in users:
-            if user.email:  # make sure user has an email
-                send_email(to=user.email, subject=subject, body=body)
 
+        emails = [ (subject, body, None,[user.email]) for user in users]
+        send_mass_mail(emails ,fail_silently=False)
         return redirect('view_notices')  # redirect to notice list
 
     return render(request, 'create.html')

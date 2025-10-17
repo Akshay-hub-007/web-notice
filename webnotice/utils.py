@@ -1,6 +1,6 @@
 import smtplib
 from email.message import EmailMessage
-
+from django.core.mail import send_mass_mail
 def send_email(to, subject, body, use_ssl=False, timeout=20):
     """Send email via Gmail SMTP (TLS or SSL)"""
     sender_email = "akshaykalangi54@gmail.com"

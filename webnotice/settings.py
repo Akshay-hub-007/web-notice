@@ -70,6 +70,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'webnotice.wsgi.application'
 
+SESSION_COOKIE_AGE = 1800
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+EMAIL_BACKEND =  'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST =  'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'akshaykalangi54@gmail.com'
+EMAIL_HOST_PASSWORD = 'hyss gpbd icpd ctjj'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
