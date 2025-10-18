@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mass_mail
 from notice.models import Notice
 from webnotice.utils import send_email
-
+import cloudinary
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 import datetime
@@ -105,8 +105,6 @@ def create(request):
         expiry_date = request.POST.get('expiry_date')  # optional
         is_active = request.POST.get('is_active') == 'on'  # checkbox
         attachment = request.FILES.get('attachment')  # file
-
-        # Create and save notice
         notice = Notice(
             title=title,
             content=content,

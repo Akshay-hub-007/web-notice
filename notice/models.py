@@ -2,7 +2,7 @@
 # Create your models here.
 from django.db import models
 from django.conf import settings
-
+from cloudinary.models import CloudinaryField
 class Notice(models.Model):
     PRIORITY_CHOICES = [
         ('normal', 'Normal'),
@@ -13,7 +13,7 @@ class Notice(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField()
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='normal')
-    attachment = models.FileField(upload_to='attachments/', blank=True, null=True)
+    attachment = CloudinaryField('attachments/',resource_type='raw', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     expiry_date = models.DateField(null=True, blank=True)

@@ -1,54 +1,58 @@
 {% extends "base.html" %}
 
-{% block title %}Manage Tasks & Users{% endblock %}
+{% block title %}Create Notice{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2 class="mb-4">Create</h2>
+<div class="container mt-4">
+    <h2 class="mb-4">Create Notice</h2>
 
-    <!-- Task Creation Form -->
+    <!-- Notice Creation Form -->
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">
-            Create a Task
+            New Notice
         </div>
         <div class="card-body">
-            <form method="post">
+            <!-- ✅ Important: enctype must be multipart/form-data -->
+            <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
-                <div class="mb-3">
-                    <label for="taskTitle" class="form-label">Task Title</label>
-                    <input type="text" id="taskTitle" name="title" class="form-control" placeholder="Enter task title" required>
-                </div>
-                <div class="mb-3">
-                    <label for="taskDesc" class="form-label">Task Description</label>
-                    <textarea id="taskDesc" name="description" class="form-control" rows="3" placeholder="Enter task details"></textarea>
-                </div>
-                <button type="submit" class="btn btn-success">Create Task</button>
-            </form>
-        </div>
-    </div>
 
-    <!-- User Search Section -->
-    <div class="card">
-        <div class="card-header bg-secondary text-white">
-            Add User to Group
-        </div>
-        <div class="card-body">
-            <form method="get" class="d-flex mb-3">
-                <input type="text" name="q" class="form-control me-2" placeholder="Search user by name or email">
-                <button type="submit" class="btn btn-outline-light">Search</button>
-            </form>
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title</label>
+                    <input type="text" id="title" name="title" class="form-control" placeholder="Enter notice title" required>
+                </div>
 
-            <!-- Example User Search Results -->
-            <ul class="list-group">
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    John Doe (john@example.com)
-                    <button class="btn btn-sm btn-primary">Add to Group</button>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    Jane Smith (jane@example.com)
-                    <button class="btn btn-sm btn-primary">Add to Group</button>
-                </li>
-            </ul>
+                <div class="mb-3">
+                    <label for="content" class="form-label">Content</label>
+                    <textarea id="content" name="content" class="form-control" rows="3" placeholder="Enter notice content" required></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="priority" class="form-label">Priority</label>
+                    <select id="priority" name="priority" class="form-select">
+                        <option value="normal" selected>Normal</option>
+                        <option value="high">High</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="expiry_date" class="form-label">Expiry Date</label>
+                    <input type="date" id="expiry_date" name="expiry_date" class="form-control">
+                </div>
+
+                <!-- ✅ File Upload (for Cloudinary) -->
+                <div class="mb-3">
+                    <label for="attachment" class="form-label">Attachment (optional)</label>
+                    <input type="file" id="attachment" name="attachment" class="form-control">
+                </div>
+
+                <div class="form-check mb-3">
+                    <input type="checkbox" id="is_active" name="is_active" class="form-check-input" checked>
+                    <label for="is_active" class="form-check-label">Active</label>
+                </div>
+
+                <button type="submit" class="btn btn-success">Create Notice</button>
+            </form>
         </div>
     </div>
 </div>

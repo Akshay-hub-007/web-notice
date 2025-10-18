@@ -11,6 +11,15 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import  cloudinary
+
+cloudinary.config(
+    cloud_name = "dgol9vh5t",
+    api_key = "198691541783472",
+    api_secret = "YdpBWNpGwD0sElCKIlkBFXRPPVs"
+)
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
