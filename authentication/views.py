@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import get_user_model, authenticate, login as auth_login, logout
 from django.contrib.auth.decorators import login_required
-
+import cloudinary.uploader
 from webnotice.utils import send_email
 
 User = get_user_model()
@@ -15,7 +15,7 @@ def register(request):
         username = request.POST.get("username")
         email = request.POST.get("email")
         phone = request.POST.get("phone")
-        user_type = request.POST.get("user_type")  # admin/user
+        user_type = request.POST.get("user_type")
         password1 = request.POST.get("password")
         image = request.FILES.get("image")
 
@@ -27,19 +27,29 @@ def register(request):
         if User.objects.filter(phone=phone).exists():
             return render(request, 'register.html', {"error": "Phone number already exists"})
 
-        # Create user (password hashed automatically)
+        # ✅ Upload image to Cloudinary (if provided)
+        image_url = None
+        if image:
+            upload_result = cloudinary.uploader.upload(image)
+            image_url = upload_result.get("secure_url")
+
+        # ✅ Create user with Cloudinary image URL
         user = User.objects.create_user(
             username=username,
             email=email,
             phone=phone,
             user_type=user_type,
             password=password1,
-            image=image
         )
+
+        # Save image URL if available
+        if image_url:
+            user.image = image_url
+            user.save()
 
         auth_login(request, user)
         send_email(email, "Welcome to Web Notice", "Thank you for registering!")
-        # Log the user in
+
         return redirect('/dashboard/')
 
     return render(request, "register.html")
@@ -70,7 +80,6 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
-
 @login_required
 def profile(request):
     user = request.user
@@ -79,18 +88,24 @@ def profile(request):
         username = request.POST.get("username")
         email = request.POST.get("email")
         phone = request.POST.get("phone")
-        user_type = request.POST.get("user_type")
         image = request.FILES.get("image")
 
-        # Update user details
         user.username = username
         user.email = email
         user.phone = phone
-        user.user_type = user_type
-        if image:
-            user.image = image
-        user.save()
 
+        if image:
+            if user.image_public_id:
+                try:
+                    res=cloudinary.uploader.destroy(user.image_public_id)
+                except Exception as e:
+                    print("Cloudinary deletion error:", e)
+
+            upload_result = cloudinary.uploader.upload(image)
+            user.image = upload_result.get("secure_url")
+            user.image_public_id = upload_result.get("public_id")
+
+        user.save()
         return render(request, "profile.html", {"user": user, "message": "Profile updated successfully!"})
 
     return render(request, "profile.html", {"user": user})

@@ -19,11 +19,19 @@
     <!-- Profile Image -->
     <div class="mb-3 text-center">
         {% if user.image %}
-            <img src="{{ user.image.url }}" alt="Profile Image"
-                 width="120" height="120"
-                 style="border-radius: 50%; object-fit: cover;">
+            <!-- ✅ If image is a Cloudinary URL -->
+            {% if "http" in user.image|stringformat:"s" %}
+                <img src="{{ user.image }}" alt="Profile Image"
+                     width="120" height="120"
+                     style="border-radius: 50%; object-fit: cover;">
+            {% else %}
+                <!-- ✅ If image is locally stored -->
+                <img src="{{ user.image.url }}" alt="Profile Image"
+                     width="120" height="120"
+                     style="border-radius: 50%; object-fit: cover;">
+            {% endif %}
         {% else %}
-            <!-- Show first letter as fallback -->
+            <!-- Fallback: First letter -->
             <div style="
                 width:120px; height:120px;
                 border-radius:50%;

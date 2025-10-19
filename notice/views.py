@@ -104,7 +104,8 @@ def create(request):
         priority = request.POST.get('priority', 'normal')
         expiry_date = request.POST.get('expiry_date')  # optional
         is_active = request.POST.get('is_active') == 'on'  # checkbox
-        attachment = request.FILES.get('attachment')  # file
+        attachment = request.FILES.get('attachment')
+        print(attachment.__dict__)
         notice = Notice(
             title=title,
             content=content,

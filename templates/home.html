@@ -53,7 +53,7 @@
                     <li class="nav-item d-flex align-items-center">
                         <a class="nav-link" href="{% url 'profile' %}">
                             {% if user.image %}
-                                <img src="{{ user.image.url }}" alt="Profile" class="rounded-circle" style="width:40px; height:40px; object-fit:cover;">
+                                <img src="{{ user.image }}" alt="Profile" class="rounded-circle" style="width:40px; height:40px; object-fit:cover;">
                             {% else %}
                                 <div class="avatar-circle">{{ user.username|slice:":1"|upper }}</div>
                             {% endif %}

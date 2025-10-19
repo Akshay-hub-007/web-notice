@@ -13,7 +13,7 @@ class Notice(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField()
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='normal')
-    attachment = CloudinaryField('attachments/',resource_type='raw', blank=True, null=True)
+    attachment = CloudinaryField(folder="media/attachments",resource_type='raw', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     expiry_date = models.DateField(null=True, blank=True)
