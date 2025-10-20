@@ -27,4 +27,4 @@ def send_email(to, subject, body, use_ssl=False, timeout=20):
         server.send_message(msg)
         server.quit()
     except Exception as e:
-        print(f"Failed to send email: {type(e).__name__}: {e}")
+        print(f"Failed to send email: {type(e). __name__}: {e}")
