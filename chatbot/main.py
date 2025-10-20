@@ -1,6 +1,8 @@
 from dotenv import load_dotenv
-# from langchain.chat_models import init_chat_model
+from langchain.chat_models import init_chat_model
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAI
+
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_chroma import Chroma
 from langchain_text_splitters  import RecursiveCharacterTextSplitter
@@ -11,18 +13,27 @@ from langchain_community.agent_toolkits import SQLDatabaseToolkit
 from langchain.agents import create_agent
 import os
 from langgraph.graph import START , END
-
+from langchain_huggingface import HuggingFaceEndpoint,ChatHuggingFace
+from langchain_groq import ChatGroq
 
 load_dotenv()
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
-embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+# llm1 = HuggingFaceEndpoint(
+#     repo_id="microsoft/Phi-3-mini-4k-instruct",
+#     task="text-generation",
+#     max_new_tokens=512,
+#     do_sample=False,
+#     repetition_penalty=1.03,
+# )
+# llm = ChatHuggingFace(llm=llm1, verbose=True)
+# llm = ChatGroq(model="gemma2-9b-it")
+embeddings = GoogleGenerativeAI(model="models/gemini-embedding-001")
 graph = StateGraph(dict)
 
 db = SQLDatabase.from_uri("mysql+pymysql://root:1234@localhost:3306/web-notice")
 
-# model = init_chat_model("gemini-2.5-flash")
-
+model = llm
 
 class QueryClassification(BaseModel):
     category: str
@@ -60,45 +71,67 @@ def classify_category(state: dict):
     else:
         return 'custom_category'
 
+# def dbNode(state: dict):
+#     """
+#     Processes a user query, retrieves data from the database using SQLDatabaseToolkit,
+#     and returns the agent's response.
+#
+#     Args:
+#         state (dict): A dictionary containing the key 'query' with the user's question.
+#
+#     Returns:
+#         dict: Contains the original query and the full response from the agent.
+#     """
+#     user_query = state.get('query', '')
+#
+#     system_prompt = (
+#         "You are an assistant. Make database calls similar to the question, "
+#         "retrieve documents, and provide an answer."
+#     )
+#
+#     # Initialize the toolkit and retrieve tools
+#     toolkit = SQLDatabaseToolkit(db=db, llm=llm)
+#     tools = toolkit.get_tools()
+#
+#     # Create an agent with the system prompt
+#     agent = create_agent(
+#         model=model,
+#         tools=tools,
+#         system_prompt=system_prompt
+#     )
+#
+#     # Prepare input messages
+#     inputs = {"messages": [{"role": "user", "content": user_query}]}
+#
+#     # Invoke the agent
+#     result = agent.invoke(inputs)
+#     print(result)
+#
+#     return {"query": user_query, "response": result}
+
 def dbNode(state: dict):
-    """
-    Processes a user query, retrieves data from the database using SQLDatabaseToolkit,
-    and returns the agent's response.
-
-    Args:
-        state (dict): A dictionary containing the key 'query' with the user's question.
-
-    Returns:
-        dict: Contains the original query and the full response from the agent.
-    """
     user_query = state.get('query', '')
-
-    system_prompt = (
-        "You are an assistant. Make database calls similar to the question, "
-        "retrieve documents, and provide an answer."
-    )
-
-    # Initialize the toolkit and retrieve tools
     toolkit = SQLDatabaseToolkit(db=db, llm=llm)
     tools = toolkit.get_tools()
+    system_prompt = "You are an assistant. Make database calls similar to the question, retrieve documents, and provide an answer."
 
-    # Create an agent with the system prompt
-    agent = create_agent(
-        model="gemini-2.5-flash",
-        tools=tools,
-        system_prompt=system_prompt
-    )
+    agent = create_agent(model=llm, tools=tools, system_prompt=system_prompt)
+    result = agent.invoke({"messages": [{"role": "user", "content": user_query}]})
 
-    # Prepare input messages
-    inputs = {"messages": [{"role": "user", "content": user_query}]}
+    # Extract final AI message
+    final_answer = ""
+    if isinstance(result, dict) and "messages" in result:
+        for msg in reversed(result["messages"]):
+            if isinstance(msg, list):
+                for m in msg:
+                    if hasattr(m, "content") and m.content.strip():
+                        print(m.content)
+            else:
+                if hasattr(msg, "content") and msg.content.strip():
+                    print(msg.content)
 
-    # Invoke the agent
-    result = agent.invoke(inputs)
-    print(result)
-
-    return {"query": user_query, "response": result}
-
-
+    print("🧩 Final Answer:", final_answer)
+    return {"query": user_query, "response": final_answer}
 def query_node(state: dict):
     user_query = state["query"]
     persist_dir = "./chroma_langchain_db"
@@ -157,4 +190,4 @@ graph.add_edge("rag_node",END)
 graph.add_edge("custom_category",END)
 user_input = {"query": "What is the maximum file size that can be attached?"}
 
-dbNode({"query" : "how many notices are there in notices db"})
+dbNode({"query" : "how many notices are there in notices db .what are they list them"})
