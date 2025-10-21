@@ -1,16 +1,32 @@
+from urllib.parse import uses_relative
+
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mass_mail
+from django.views.decorators.csrf import csrf_exempt
 from notice.models import Notice
 from webnotice.utils import send_email
 import cloudinary
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 import datetime
+from chatbot.main import workflow
+
 User = get_user_model()
 
 # Create your views here.
 
+@login_required
+@csrf_exempt
+def chat_bot(request):
+    user_query = ""
+    if request.method == "POST":
+        user_query = request.POST.get("message", "").lower()
+
+    res = workflow.inoke({"user_query":user_query})
+
+    return JsonResponse({"reply": res.response})
 @login_required
 def dashboard(request):
     user = request.user

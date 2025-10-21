@@ -196,25 +196,35 @@
     const chatIcon = document.getElementById('chatIcon');
 
     sendBtn.addEventListener('click', () => {
-        const msg = chatInput.value.trim();
-        if (msg) {
-            const userMsg = document.createElement('div');
-            userMsg.classList.add('text-end', 'mb-2');
-            userMsg.innerHTML = `<span class="badge bg-primary">${msg}</span>`;
-            chatBody.appendChild(userMsg);
-            chatInput.value = '';
+    const msg = chatInput.value.trim();
+    if (!msg) return;
 
-            chatBody.scrollTop = chatBody.scrollHeight;
+    // Show user message in chat
+    const userMsg = document.createElement('div');
+    userMsg.classList.add('text-end', 'mb-2');
+    userMsg.innerHTML = `<span class="badge bg-primary">${msg}</span>`;
+    chatBody.appendChild(userMsg);
+    chatInput.value = '';
+    chatBody.scrollTop = chatBody.scrollHeight;
 
-            setTimeout(() => {
-                const botMsg = document.createElement('div');
-                botMsg.classList.add('text-start', 'mb-2');
-                botMsg.innerHTML = `<span class="badge bg-secondary">You said: ${msg}</span>`;
-                chatBody.appendChild(botMsg);
-                chatBody.scrollTop = chatBody.scrollHeight;
-            }, 600);
-        }
+    // Send message to Django
+    fetch("{% url 'chat_bot' %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: `message=${encodeURIComponent(msg)}`
+    })
+    .then(res => res.json())
+    .then(data => {
+        const botMsg = document.createElement('div');
+        botMsg.classList.add('text-start', 'mb-2');
+        botMsg.innerHTML = `<span class="badge bg-secondary">${data.reply}</span>`;
+        chatBody.appendChild(botMsg);
+        chatBody.scrollTop = chatBody.scrollHeight;
     });
+});
 
     closeChat.addEventListener('click', () => {
         chatbot.style.display = 'none';

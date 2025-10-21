@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain_google_genai import GoogleGenerativeAI
+# from langchain_google_genai import GoogleGenerativeAI
 
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_chroma import Chroma
@@ -28,7 +28,7 @@ llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 # )
 # llm = ChatHuggingFace(llm=llm1, verbose=True)
 # llm = ChatGroq(model="gemma2-9b-it")
-embeddings = GoogleGenerativeAI(model="models/gemini-embedding-001")
+embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 graph = StateGraph(dict)
 
 db = SQLDatabase.from_uri("mysql+pymysql://root:1234@localhost:3306/web-notice")
@@ -108,7 +108,6 @@ def classify_category(state: dict):
 #     print(result)
 #
 #     return {"query": user_query, "response": result}
-
 def dbNode(state: dict):
     user_query = state.get('query', '')
     toolkit = SQLDatabaseToolkit(db=db, llm=llm)
@@ -118,19 +117,28 @@ def dbNode(state: dict):
     agent = create_agent(model=llm, tools=tools, system_prompt=system_prompt)
     result = agent.invoke({"messages": [{"role": "user", "content": user_query}]})
 
+    print(result)
+
     # Extract final AI message
     final_answer = ""
-    if isinstance(result, dict) and "messages" in result:
-        for msg in reversed(result["messages"]):
-            if isinstance(msg, list):
-                for m in msg:
-                    if hasattr(m, "content") and m.content.strip():
-                        print(m.content)
-            else:
-                if hasattr(msg, "content") and msg.content.strip():
-                    print(msg.content)
 
-    print("🧩 Final Answer:", final_answer)
+    # Method 1: Get the last message directly
+    if result.get('messages'):
+        last_message = result['messages'][-1]
+        final_answer = last_message.content
+
+    # Method 2: More explicit - check if it's an AIMessage
+    from langchain_core.messages import AIMessage
+
+    if result.get('messages'):
+        messages = result['messages']
+        # Get last AIMessage (in case there are other message types at the end)
+        for msg in reversed(messages):
+            if isinstance(msg, AIMessage):
+                final_answer = msg.content
+                break
+
+    print("Final Answer:", final_answer)
     return {"query": user_query, "response": final_answer}
 def query_node(state: dict):
     user_query = state["query"]
@@ -179,10 +187,13 @@ If the answer is not found in the context, say:
     print("\nAnswer:\n", answer.content)
     return {"query": user_query, "answer": answer.content}
 
+def custom_category(state:dict):
+    pass
 
 graph.add_node("classify_query", classify_query_node)
 graph.add_node("db_node", dbNode)
 graph.add_node("rag_node", query_node)
+graph.add_node("custom_category",custom_category)
 graph.add_edge(START , "classify_query")
 graph.add_conditional_edges("classify_query",classify_category,{"db_node":"db_node","rag_node":"rag_node","custom_category":"custom_category"})
 graph.add_edge("db_node",END)
@@ -190,4 +201,11 @@ graph.add_edge("rag_node",END)
 graph.add_edge("custom_category",END)
 user_input = {"query": "What is the maximum file size that can be attached?"}
 
-dbNode({"query" : "how many notices are there in notices db .what are they list them"})
+# dbNode({"query" : "how many notices are there in notices db .what are they list them"})
+
+
+workflow = graph.compile()
+
+res = workflow.invoke({"query": "how many notices are there in notices db .what are they list them"})
+
+print(res)
