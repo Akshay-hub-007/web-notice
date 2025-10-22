@@ -112,8 +112,17 @@ def dbNode(state: dict):
     user_query = state.get('query', '')
     toolkit = SQLDatabaseToolkit(db=db, llm=llm)
     tools = toolkit.get_tools()
-    system_prompt = "You are an assistant. Make database calls similar to the question, retrieve documents, and provide an answer."
-
+    system_prompt = """
+     You are a helpful assistant specialized in answering database queries.
+     - Always give responses in plain text only.
+     - Do not return any JSON, code blocks, or markdown formatting.
+     - If the query returns multiple rows, list them one after another, each on a new line.
+     - Format each record as:
+       Title: <title>, Content: <content>, Created At: <created_at>, Expiry Date: <expiry_date>
+     - Do not include extra symbols like *, -, or quotes.
+     - If no data matches, reply exactly with: No relevant data found.
+     - Keep the tone polite and concise.
+     """
     agent = create_agent(model=llm, tools=tools, system_prompt=system_prompt)
     result = agent.invoke({"messages": [{"role": "user", "content": user_query}]})
 
@@ -131,11 +140,15 @@ def dbNode(state: dict):
     from langchain_core.messages import AIMessage
 
     if result.get('messages'):
-        messages = result['messages']
-        # Get last AIMessage (in case there are other message types at the end)
-        for msg in reversed(messages):
+        for msg in reversed(result['messages']):
             if isinstance(msg, AIMessage):
-                final_answer = msg.content
+                # Handle both dict and string outputs safely
+                content = msg.content
+                if isinstance(content, dict):
+                    # Extract only the plain text part
+                    final_answer = content.get("text", "")
+                else:
+                    final_answer = str(content)
                 break
 
     print("Final Answer:", final_answer)
@@ -172,17 +185,18 @@ def query_node(state: dict):
     context = "\n\n".join([doc.page_content for doc in results])
 
     prompt = f"""
-You are an intelligent assistant that answers user questions based only on the given document context.
+    You are a knowledgeable assistant that answers questions based ONLY on the given context.
+    - Provide concise and accurate answers.
+    - If the answer is not found, reply: "The document does not provide this information."
+    - Format lists or multiple points clearly.
+    - Respond politely.
 
-Context:
-\"\"\"{context}\"\"\"
+    Context:
+    \"\"\"{context}\"\"\"
 
-Question:
-{user_query}
-
-If the answer is not found in the context, say:
-"The document does not provide this information."
-"""
+    Question:
+    {user_query}
+    """
     answer = llm.invoke(prompt)
     print("\nAnswer:\n", answer.content)
     return {"query": user_query, "answer": answer.content}
@@ -206,6 +220,6 @@ user_input = {"query": "What is the maximum file size that can be attached?"}
 
 workflow = graph.compile()
 
-res = workflow.invoke({"query": "how many notices are there in notices db .what are they list them"})
+# res = workflow.invoke({"query": "how many notices are there in notices db .what are they list them"})
 
-print(res)
+# print(res)

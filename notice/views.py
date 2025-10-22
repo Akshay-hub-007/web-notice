@@ -15,18 +15,26 @@ from chatbot.main import workflow
 
 User = get_user_model()
 
+
 # Create your views here.
 
 @login_required
 @csrf_exempt
+@login_required
 def chat_bot(request):
     user_query = ""
     if request.method == "POST":
         user_query = request.POST.get("message", "").lower()
 
-    res = workflow.inoke({"user_query":user_query})
+        res = workflow.invoke({"query": user_query})
+        print("notices")
+        print(res)
+        # Return reply safely
+        return JsonResponse({"reply": res.get("response", "No reply found.")})
 
-    return JsonResponse({"reply": res.response})
+    return JsonResponse({"reply": "Please send a POST request."})
+
+
 @login_required
 def dashboard(request):
     user = request.user
@@ -56,9 +64,11 @@ def dashboard(request):
     }
     return render(request, 'dashboard.html', context)
 
+
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from datetime import datetime
+
 
 @login_required
 def notices(request):
@@ -106,11 +116,12 @@ def notices(request):
 
 @login_required
 def manage(request):
-    return render(request,'manage.html')
+    return render(request, 'manage.html')
 
 
 def home(request):
     return render(request, "home.html")
+
 
 @login_required
 def create(request):
@@ -134,7 +145,7 @@ def create(request):
         notice.save()
 
         # Send email to all users
-        users = User.objects.exclude(email = '')  # fetch active users
+        users = User.objects.exclude(email='')  # fetch active users
         subject = f"New Notice: {notice.title}"
         body = f"""
 Hello,
@@ -146,8 +157,8 @@ Content: {notice.content}
 Priority: {notice.priority}
 """
 
-        emails = [ (subject, body, None,[user.email]) for user in users]
-        send_mass_mail(emails ,fail_silently=False)
+        emails = [(subject, body, None, [user.email]) for user in users]
+        send_mass_mail(emails, fail_silently=False)
         return redirect('view_notices')  # redirect to notice list
 
     return render(request, 'create.html')
