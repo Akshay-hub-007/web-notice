@@ -22,11 +22,14 @@ User = get_user_model()
 @csrf_exempt
 @login_required
 def chat_bot(request):
-    user_query = ""
+    current_user = request.user
+    user_type = getattr(current_user, 'user_type', None)  # safer way in case field is missing
+    print("Logged in user type:", user_type)
+
     if request.method == "POST":
         user_query = request.POST.get("message", "").lower()
-
-        res = workflow.invoke({"query": user_query})
+        print(user_type)
+        res = workflow.invoke({"query": user_query,"role":user_type})
         print("notices")
         print(res)
         # Return reply safely

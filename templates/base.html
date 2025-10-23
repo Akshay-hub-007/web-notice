@@ -126,6 +126,25 @@
             color: #0d6efd;
         }
 
+        /* Loader animation */
+        .loader span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin: 0 2px;
+            background-color: #0d6efd;
+            border-radius: 50%;
+            animation: bounce 0.6s infinite alternate;
+        }
+
+        .loader span:nth-child(2) { animation-delay: 0.2s; }
+        .loader span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-6px); }
+        }
+
         @media (max-width: 768px) {
             .chatbot-container {
                 width: 90%;
@@ -212,6 +231,15 @@
         chatInput.value = '';
         chatBody.scrollTop = chatBody.scrollHeight;
 
+        // Display bot loader bubble
+        const botMsg = document.createElement('div');
+        botMsg.classList.add('text-start', 'mb-2');
+        botMsg.innerHTML = `<div class="notice-card loader">
+                                <span></span><span></span><span></span>
+                            </div>`;
+        chatBody.appendChild(botMsg);
+        chatBody.scrollTop = chatBody.scrollHeight;
+
         // Send message to Django backend
         fetch("{% url 'chat_bot' %}", {
             method: "POST",
@@ -225,24 +253,26 @@
         .then(data => {
             let reply = data.reply.trim();
 
-            // Split by newline — each line = one notice
-            const lines = reply.split('\n').filter(line => line.trim() !== '');
+            // Remove loader content
+            botMsg.innerHTML = '';
 
-            // Create formatted HTML for each notice
-            const formattedReplies = lines.map(line => {
-                const parts = line.split(',').map(p => p.trim());
-                const noticeHTML = parts.map(p => {
-                    const [key, value] = p.split(':').map(s => s.trim());
-                    return `<div><strong>${key}:</strong> ${value}</div>`;
+            // Detect if reply contains notices
+            if (reply.includes('Title:')) {
+                const lines = reply.split('\n').filter(line => line.trim() !== '');
+                const formattedReplies = lines.map(line => {
+                    const parts = line.split(',').map(p => p.trim());
+                    const noticeHTML = parts.map(p => {
+                        const [key, value] = p.split(':').map(s => s.trim());
+                        return `<div><strong>${key}:</strong> ${value}</div>`;
+                    }).join('');
+                    return `<div class="notice-card">${noticeHTML}</div>`;
                 }).join('');
-                return `<div class="notice-card">${noticeHTML}</div>`;
-            }).join('');
+                botMsg.innerHTML = formattedReplies;
+            } else {
+                // Plain text
+                botMsg.innerHTML = `<div class="notice-card">${reply}</div>`;
+            }
 
-            const botMsg = document.createElement('div');
-            botMsg.classList.add('text-start', 'mb-2');
-            botMsg.innerHTML = formattedReplies;
-
-            chatBody.appendChild(botMsg);
             chatBody.scrollTop = chatBody.scrollHeight;
         });
     });

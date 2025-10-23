@@ -60,7 +60,7 @@ Query: "{user_query}"
     llm_with_classify = llm.with_structured_output(QueryClassification)
     result = llm_with_classify.invoke(classification_prompt)
     print("Classification Result:", result.category)
-    return {'query': user_query, 'category': result.category}
+    return {'query': user_query, 'category': result.category,'role':state['role']}
 
 
 def classify_category(state: dict):
@@ -110,49 +110,65 @@ def classify_category(state: dict):
 #     return {"query": user_query, "response": result}
 def dbNode(state: dict):
     user_query = state.get('query', '')
+    user_role = state.get('role', 'user')  # 'admin' or 'user'
+    print(user_role)
+    # Admin-only actions restriction
+    role_notice = "Only admins can create, update, or delete notices."
+    if user_role != 'admin':
+        # Include in prompt that non-admins can still view notices
+        system_prompt = f"""
+        You are a highly skilled SQL assistant specialized in managing the 'web-notice' database.
+        - {role_notice}
+        - Non-admin users can view or query the latest notices, but cannot modify or create them.
+        - Always give responses in plain text only.
+        - Do not return any JSON, code blocks, or markdown formatting.
+        - If the query returns multiple rows, list them one after another, each on a new line.
+        - Format each record as:
+          Title: <title>, Content: <content>, Created At: <created_at>, Expiry Date: <expiry_date>
+        - If no data matches, reply exactly: No relevant data found.
+        - Keep the tone polite and concise.
+        """
+    else:
+        # Admin prompt: full access
+        system_prompt = f"""
+        You are a highly skilled SQL assistant specialized in managing the 'web-notice' database.
+        - Admin users can create, update, delete, or view notices.
+        - Always give responses in plain text only.
+        - Do not return any JSON, code blocks, or markdown formatting.
+        - If the query returns multiple rows, list them one after another, each on a new line.
+        - Format each record as:
+          Title: <title>, Content: <content>, Created At: <created_at>, Expiry Date: <expiry_date>
+        - If no data matches, reply exactly: No relevant data found.
+        - Keep the tone polite and concise.
+        """
+
+    # Initialize the agent and tools
     toolkit = SQLDatabaseToolkit(db=db, llm=llm)
     tools = toolkit.get_tools()
-    system_prompt = """
-     You are a helpful assistant specialized in answering database queries.
-     - Always give responses in plain text only.
-     - Do not return any JSON, code blocks, or markdown formatting.
-     - If the query returns multiple rows, list them one after another, each on a new line.
-     - Format each record as:
-       Title: <title>, Content: <content>, Created At: <created_at>, Expiry Date: <expiry_date>
-     - Do not include extra symbols like *, -, or quotes.
-     - If no data matches, reply exactly with: No relevant data found.
-     - Keep the tone polite and concise.
-     """
+    print(system_prompt)
     agent = create_agent(model=llm, tools=tools, system_prompt=system_prompt)
+
+    # Invoke agent
     result = agent.invoke({"messages": [{"role": "user", "content": user_query}]})
 
-    print(result)
-
-    # Extract final AI message
+    # Extract clean final answer
     final_answer = ""
-
-    # Method 1: Get the last message directly
-    if result.get('messages'):
-        last_message = result['messages'][-1]
-        final_answer = last_message.content
-
-    # Method 2: More explicit - check if it's an AIMessage
     from langchain_core.messages import AIMessage
 
     if result.get('messages'):
         for msg in reversed(result['messages']):
             if isinstance(msg, AIMessage):
-                # Handle both dict and string outputs safely
                 content = msg.content
                 if isinstance(content, dict):
-                    # Extract only the plain text part
                     final_answer = content.get("text", "")
+                elif isinstance(content, list) and len(content) > 0:
+                    final_answer = content[0].get('text', '')
                 else:
                     final_answer = str(content)
                 break
 
-    print("Final Answer:", final_answer)
     return {"query": user_query, "response": final_answer}
+
 def query_node(state: dict):
     user_query = state["query"]
     persist_dir = "./chroma_langchain_db"
@@ -166,7 +182,8 @@ def query_node(state: dict):
         )
     else:
         print("No existing vector store found. Creating one now...")
-        file_path = "web_notice_info.pdf"
+        file_path = r"E:\webn\webnotice\chatbot\web_notice_info.pdf"
+
         loader = PyPDFLoader(file_path)
         docs = loader.load()
         text_splitter = RecursiveCharacterTextSplitter(
@@ -199,7 +216,7 @@ def query_node(state: dict):
     """
     answer = llm.invoke(prompt)
     print("\nAnswer:\n", answer.content)
-    return {"query": user_query, "answer": answer.content}
+    return {"query": user_query, "response": answer.content}
 
 def custom_category(state:dict):
     pass
@@ -214,7 +231,7 @@ graph.add_edge("db_node",END)
 graph.add_edge("rag_node",END)
 graph.add_edge("custom_category",END)
 user_input = {"query": "What is the maximum file size that can be attached?"}
-
+# query_node(user_input)
 # dbNode({"query" : "how many notices are there in notices db .what are they list them"})
 
 
