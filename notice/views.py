@@ -18,25 +18,40 @@ User = get_user_model()
 
 # Create your views here.
 
-@login_required
+
 @csrf_exempt
 @login_required
 def chat_bot(request):
     current_user = request.user
-    user_type = getattr(current_user, 'user_type', None)  # safer way in case field is missing
+    user_type = getattr(current_user, 'user_type', None)
     print("Logged in user type:", user_type)
 
     if request.method == "POST":
+        # Get text message
         user_query = request.POST.get("message", "").lower()
-        print(user_type)
-        res = workflow.invoke({"query": user_query,"role":user_type})
-        print("notices")
-        print(res)
-        # Return reply safely
-        return JsonResponse({"reply": res.get("response", "No reply found.")})
+        # Get file if present
+        uploaded_file = request.FILES.get("file")
+
+        cloudinary_url = None
+        if uploaded_file:
+            # Call the upload_in_cloudinary function
+            cloudinary_url = upload_in_cloudinary(uploaded_file)
+            print("Uploaded file URL:", cloudinary_url)
+
+        # Pass text and file URL to your chatbot workflow
+        res = workflow.invoke({
+            "query": user_query,
+            "role": user_type,
+            "file_url": cloudinary_url  # pass Cloudinary URL here
+        })
+
+        return JsonResponse({
+            "reply": res.get("response", "No reply found."),
+            "file_received": bool(uploaded_file),
+            "file_url": cloudinary_url
+        })
 
     return JsonResponse({"reply": "Please send a POST request."})
-
 
 @login_required
 def dashboard(request):
@@ -165,3 +180,16 @@ Priority: {notice.priority}
         return redirect('view_notices')  # redirect to notice list
 
     return render(request, 'create.html')
+
+import cloudinary.uploader
+
+def upload_in_cloudinary(file):
+    """
+    Uploads a Django file object to Cloudinary and returns the URL.
+    """
+    try:
+        result = cloudinary.uploader.upload(file)
+        return result.get("secure_url")
+    except Exception as e:
+        print("Cloudinary upload failed:", e)
+        return None

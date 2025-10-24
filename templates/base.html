@@ -199,10 +199,14 @@
     <div class="chatbot-body" id="chatBody">
         <div class="text-muted small">Hello 👋, how can I help you?</div>
     </div>
-    <div class="chatbot-input">
-        <input type="text" id="chatInput" placeholder="Type a message...">
-        <button id="sendBtn">Send</button>
+    <div class="chatbot-input d-flex flex-column p-2" style="gap: 6px;">
+    <input type="file" id="chatFile" class="form-control form-control-sm">
+    <div class="d-flex">
+        <input type="text" id="chatInput" placeholder="Type a message..." class="form-control">
+        <button id="sendBtn" class="btn btn-primary btn-sm ms-2">Send</button>
     </div>
+</div>
+
 </div>
 
 <!-- Floating Chat Icon -->

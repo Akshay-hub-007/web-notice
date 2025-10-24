@@ -60,7 +60,7 @@ Query: "{user_query}"
     llm_with_classify = llm.with_structured_output(QueryClassification)
     result = llm_with_classify.invoke(classification_prompt)
     print("Classification Result:", result.category)
-    return {'query': user_query, 'category': result.category,'role':state['role']}
+    return {'query': user_query, 'category': result.category,'role':state['role'],'file_url':state['file_url']}
 
 
 def classify_category(state: dict):
@@ -140,18 +140,15 @@ def dbNode(state: dict):
           Title: <title>, Content: <content>, Created At: <created_at>, Expiry Date: <expiry_date>
         - If no data matches, reply exactly: No relevant data found.
         - Keep the tone polite and concise.
+         -File path if provided keep it else keep empty 
         """
 
-    # Initialize the agent and tools
     toolkit = SQLDatabaseToolkit(db=db, llm=llm)
     tools = toolkit.get_tools()
-    print(system_prompt)
     agent = create_agent(model=llm, tools=tools, system_prompt=system_prompt)
 
-    # Invoke agent
     result = agent.invoke({"messages": [{"role": "user", "content": user_query}]})
 
-    # Extract clean final answer
     final_answer = ""
     from langchain_core.messages import AIMessage
 
@@ -231,8 +228,6 @@ graph.add_edge("db_node",END)
 graph.add_edge("rag_node",END)
 graph.add_edge("custom_category",END)
 user_input = {"query": "What is the maximum file size that can be attached?"}
-# query_node(user_input)
-# dbNode({"query" : "how many notices are there in notices db .what are they list them"})
 
 
 workflow = graph.compile()
