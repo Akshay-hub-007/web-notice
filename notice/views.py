@@ -31,7 +31,7 @@ def chat_bot(request):
         user_query = request.POST.get("message", "").lower()
         # Get file if present
         uploaded_file = request.FILES.get("file")
-
+        print(uploaded_file)
         cloudinary_url = None
         if uploaded_file:
             # Call the upload_in_cloudinary function

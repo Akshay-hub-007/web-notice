@@ -224,62 +224,65 @@
     const chatIcon = document.getElementById('chatIcon');
 
     sendBtn.addEventListener('click', () => {
-        const msg = chatInput.value.trim();
-        if (!msg) return;
+    const msg = chatInput.value.trim();
+    const fileInput = document.getElementById('chatFile');
+    const file = fileInput.files[0];
 
-        // Display user message
-        const userMsg = document.createElement('div');
-        userMsg.classList.add('text-end', 'mb-2');
-        userMsg.innerHTML = `<span class="badge bg-primary">${msg}</span>`;
-        chatBody.appendChild(userMsg);
-        chatInput.value = '';
-        chatBody.scrollTop = chatBody.scrollHeight;
+    if (!msg && !file) return;
 
-        // Display bot loader bubble
-        const botMsg = document.createElement('div');
-        botMsg.classList.add('text-start', 'mb-2');
-        botMsg.innerHTML = `<div class="notice-card loader">
-                                <span></span><span></span><span></span>
-                            </div>`;
-        chatBody.appendChild(botMsg);
-        chatBody.scrollTop = chatBody.scrollHeight;
+    // Display user message
+    const userMsg = document.createElement('div');
+    userMsg.classList.add('text-end', 'mb-2');
+    userMsg.innerHTML = `<span class="badge bg-primary">${msg || file.name}</span>`;
+    chatBody.appendChild(userMsg);
+    chatInput.value = '';
+    chatBody.scrollTop = chatBody.scrollHeight;
 
-        // Send message to Django backend
-        fetch("{% url 'chat_bot' %}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-                "X-CSRFToken": "{{ csrf_token }}"
-            },
-            body: `message=${encodeURIComponent(msg)}`
-        })
-        .then(res => res.json())
-        .then(data => {
-            let reply = data.reply.trim();
+    // Display bot loader bubble
+    const botMsg = document.createElement('div');
+    botMsg.classList.add('text-start', 'mb-2');
+    botMsg.innerHTML = `<div class="notice-card loader"><span></span><span></span><span></span></div>`;
+    chatBody.appendChild(botMsg);
+    chatBody.scrollTop = chatBody.scrollHeight;
 
-            // Remove loader content
-            botMsg.innerHTML = '';
+    // Create FormData
+    const formData = new FormData();
+    formData.append("message", msg);
+    if (file) formData.append("file", file);
 
-            // Detect if reply contains notices
-            if (reply.includes('Title:')) {
-                const lines = reply.split('\n').filter(line => line.trim() !== '');
-                const formattedReplies = lines.map(line => {
-                    const parts = line.split(',').map(p => p.trim());
-                    const noticeHTML = parts.map(p => {
-                        const [key, value] = p.split(':').map(s => s.trim());
-                        return `<div><strong>${key}:</strong> ${value}</div>`;
-                    }).join('');
-                    return `<div class="notice-card">${noticeHTML}</div>`;
+    // Send message + file to Django backend
+    fetch("{% url 'chat_bot' %}", {
+        method: "POST",
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        let reply = data.reply.trim();
+
+        // Remove loader
+        botMsg.innerHTML = '';
+
+        // Display bot response
+        if (reply.includes('Title:')) {
+            const lines = reply.split('\n').filter(line => line.trim() !== '');
+            const formattedReplies = lines.map(line => {
+                const parts = line.split(',').map(p => p.trim());
+                const noticeHTML = parts.map(p => {
+                    const [key, value] = p.split(':').map(s => s.trim());
+                    return `<div><strong>${key}:</strong> ${value}</div>`;
                 }).join('');
-                botMsg.innerHTML = formattedReplies;
-            } else {
-                // Plain text
-                botMsg.innerHTML = `<div class="notice-card">${reply}</div>`;
-            }
+                return `<div class="notice-card">${noticeHTML}</div>`;
+            }).join('');
+            botMsg.innerHTML = formattedReplies;
+        } else {
+            botMsg.innerHTML = `<div class="notice-card">${reply}</div>`;
+        }
 
-            chatBody.scrollTop = chatBody.scrollHeight;
-        });
+        chatBody.scrollTop = chatBody.scrollHeight;
+        fileInput.value = ''; // clear file input after sending
     });
+});
 
     closeChat.addEventListener('click', () => {
         chatbot.style.display = 'none';

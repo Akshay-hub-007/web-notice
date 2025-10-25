@@ -109,13 +109,17 @@ def classify_category(state: dict):
 #
 #     return {"query": user_query, "response": result}
 def dbNode(state: dict):
+    file_url = state.get('file_url', '')
+
+    print(file_url)
     user_query = state.get('query', '')
     user_role = state.get('role', 'user')  # 'admin' or 'user'
     print(user_role)
-    # Admin-only actions restriction
+
     role_notice = "Only admins can create, update, or delete notices."
+
     if user_role != 'admin':
-        # Include in prompt that non-admins can still view notices
+        # Non-admin users can only view
         system_prompt = f"""
         You are a highly skilled SQL assistant specialized in managing the 'web-notice' database.
         - {role_notice}
@@ -129,18 +133,42 @@ def dbNode(state: dict):
         - Keep the tone polite and concise.
         """
     else:
-        # Admin prompt: full access
+        # Admin users can do everything; LLM will decide if file_url should be used
         system_prompt = f"""
         You are a highly skilled SQL assistant specialized in managing the 'web-notice' database.
+
         - Admin users can create, update, delete, or view notices.
-        - Always give responses in plain text only.
+        - Always give responses in **plain text only**.
         - Do not return any JSON, code blocks, or markdown formatting.
+
+        **Response Formatting:**
         - If the query returns multiple rows, list them one after another, each on a new line.
         - Format each record as:
-          Title: <title>, Content: <content>, Created At: <created_at>, Expiry Date: <expiry_date>
+          Title: <title>, 
+          Content: <content>, 
+          Created At: <created_at>, 
+          Expiry Date: <expiry_date>, 
+          Priority: <priority>
+
+        **Priority Rules:**
+        - The priority can be Normal, Important, or Urgent.
+        - If not provided, default to **Normal**.
+
+        **For Creating Notices:**
+        - If the user's query is about creating a new notice, include this file URL in the attachment field:
+          {file_url if file_url else "If none is provided, keep it empty."}
+        - When creating or updating, ensure the content field has clear and meaningful information.
+        
+
+        **For Updating Notices:**
+        - If the query is related to updating a notice, check all the following fields for modification:
+          - Content
+          - Expiry Date
+          - Priority
+
+        **General Rules:**
         - If no data matches, reply exactly: No relevant data found.
         - Keep the tone polite and concise.
-         -File path if provided keep it else keep empty 
         """
 
     toolkit = SQLDatabaseToolkit(db=db, llm=llm)
