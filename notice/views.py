@@ -3,6 +3,7 @@ from urllib.parse import uses_relative
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from datetime import datetime
 from django.core.mail import send_mass_mail
 from django.views.decorators.csrf import csrf_exempt
 from notice.models import Notice
@@ -34,11 +35,9 @@ def chat_bot(request):
         print(uploaded_file)
         cloudinary_url = None
         if uploaded_file:
-            # Call the upload_in_cloudinary function
             cloudinary_url = upload_in_cloudinary(uploaded_file)
             print("Uploaded file URL:", cloudinary_url)
 
-        # Pass text and file URL to your chatbot workflow
         res = workflow.invoke({
             "query": user_query,
             "role": user_type,
@@ -83,9 +82,6 @@ def dashboard(request):
     return render(request, 'dashboard.html', context)
 
 
-from django.contrib.auth.decorators import login_required
-from django.db.models import Q
-from datetime import datetime
 
 
 @login_required
