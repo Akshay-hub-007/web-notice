@@ -200,8 +200,10 @@
         <div class="text-muted small">Hello 👋, how can I help you?</div>
     </div>
     <div class="chatbot-input d-flex flex-column p-2" style="gap: 6px;">
+        {% if user.user_type == 'admin' %}
     <input type="file" id="chatFile" class="form-control form-control-sm">
-    <div class="d-flex">
+        {% endif %}
+        <div class="d-flex">
         <input type="text" id="chatInput" placeholder="Type a message..." class="form-control">
         <button id="sendBtn" class="btn btn-primary btn-sm ms-2">Send</button>
     </div>
@@ -226,7 +228,8 @@
     sendBtn.addEventListener('click', () => {
     const msg = chatInput.value.trim();
     const fileInput = document.getElementById('chatFile');
-    const file = fileInput.files[0];
+    const file = fileInput ? fileInput.files[0] : null;
+
 
     if (!msg && !file) return;
 

@@ -50,7 +50,6 @@ INSTALLED_APPS = [
     'notice',
     'cloudinary',
     'cloudinary_storage',
-
 ]
 
 MIDDLEWARE = [
