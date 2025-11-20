@@ -25,6 +25,7 @@ langchain-google-genai
 langchain-google-vertexai
 langchain-text-splitters
 langgraph
+langchain-chroma
 
 openai
 groq
@@ -44,4 +45,5 @@ tenacity
 
 coloredlogs
 tqdm
+
 
