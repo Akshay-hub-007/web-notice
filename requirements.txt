@@ -14,6 +14,7 @@ psycopg2-binary
 mysqlclient
 PyMySQL
 mysql-connector-python
+gunicorn
 
 langchain
 langchain-core
@@ -45,5 +46,6 @@ tenacity
 
 coloredlogs
 tqdm
+
 
 
