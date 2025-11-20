@@ -9,6 +9,7 @@ pillow
 
 cloudinary
 django-cloudinary-storage
+psycopg2-binary
 
 mysqlclient
 PyMySQL
@@ -43,3 +44,4 @@ tenacity
 
 coloredlogs
 tqdm
+
